@@ -1,0 +1,101 @@
+import pandas as pd
+import duckdb as dd
+import numpy as np
+
+
+df_titanic = pd.read_csv('/home/Estudiante/Descargas/titanic.csv') 
+
+query_titanic_por_edad = """
+SELECT 
+    CASE 
+        WHEN Age >= 0 AND Age < 18 THEN '0-17'
+        WHEN Age >= 18 AND Age < 30 THEN '18-29'
+        WHEN Age >= 30 AND Age < 40 THEN '30-39'
+        WHEN Age >= 40 AND Age < 60 THEN '40-59'
+        WHEN Age >= 60 THEN '60+'
+        ELSE 'Desconocido'  -- Para valores NULL o negativos si los hay
+    END AS grupo_edad,
+    SUM(CASE WHEN Survived = 1 THEN 1 ELSE 0 END) AS sobrevivientes,
+    COUNT(*) AS total_personas,
+    ROUND(100.0 * SUM(CASE WHEN Survived = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) AS porcentaje_sobrevivientes
+FROM df_titanic
+GROUP BY grupo_edad
+ORDER BY sobrevivientes DESc
+
+"""
+
+df_edad = dd.query(query_titanic_por_edad).df()
+
+query_titanic_1_clase = """
+SELECT 
+    100.0 * SUM(CASE WHEN Survived = 1 AND PClass = 1 THEN 1 ELSE 0 END) / 
+    SUM(CASE WHEN PClass = 1 THEN 1 ELSE 0 END) AS porcentaje_sobrevivientes_primera_clase
+FROM df_titanic
+"""
+
+df_primera_clase = dd.query(query_titanic_1_clase).df()
+
+query_titanic_2_clase = """
+SELECT 
+        100.0 * SUM(CASE WHEN Survived = 1 AND PClass = 2 THEN 1 ELSE 0 END) / 
+        SUM(CASE WHEN PClass = 2 THEN 1 ELSE 0 END) AS porcentaje_sobrevivientes_primera_clase
+FROM df_titanic
+"""
+
+df_segunda_clase = dd.query(query_titanic_2_clase).df()
+
+query_titanic_3_clase = """
+SELECT 
+        100.0 * SUM(CASE WHEN Survived = 1 AND PClass = 3 THEN 1 ELSE 0 END) / 
+        SUM(CASE WHEN PClass = 3 THEN 1 ELSE 0 END) AS porcentaje_sobrevivientes_primera_clase
+FROM df_titanic
+"""
+
+df_tercera_clase = dd.query(query_titanic_3_clase).df()
+
+#%%
+df_titanic_competencia = pd.read_csv('/home/Estudiante/Descargas/titanic_competencia.csv') 
+
+#%%
+
+from sklearn.tree import DecisionTreeClassifier
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from sklearn import tree
+import pandas as pd
+
+#%%######################
+
+df_titanic = pd.read_csv('/home/Estudiante/Descargas/titanic.csv')
+
+df_titanic.dropna(subset = ['Age', 'Fare'], how = 'any', inplace = True)
+X = df_titanic[['Age', 'Fare']]
+y = df_titanic['Survived'].values
+
+df_titanic.describe()
+arbol_tit = tree.DecisionTreeClassifier(max_depth=3)
+arbol_tit.fit(X,y)
+
+#%%
+plt.figure(figsize= [15,10])
+tree.plot_tree(arbol_tit,filled = True,
+               feature_names = ['Age', 'Fare'], class_names = ['No sobrevive', 'Sobrevive'],rounded = True, fontsize = 15)
+#%%
+X = df_titanic[['Pclass', 'Sex', 'Age', 'SibSp','Parch', 'Fare',]]
+
+X = pd.get_dummies(X, drop_first=True)
+X.columns
+
+y = df_titanic['Survived']
+
+arbol_tit = tree.DecisionTreeClassifier(max_depth=3)
+arbol_tit.fit(X, y)
+
+#%%
+plt.figure(figsize=[30,10])
+tree.plot_tree(arbol_tit, filled=True,
+               feature_names=X.columns,
+               class_names=['No sobrevive', 'Sobrevive'],
+               rounded=True, fontsize=20)
+plt.show()
