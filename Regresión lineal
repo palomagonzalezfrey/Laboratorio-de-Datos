@@ -1,0 +1,32 @@
+import pandas as pd
+
+datos_a_predecir = pd.read_csv('/home/Estudiante/Descargas/Clases 17-18 - Archivos clase-20251016/datos_a_predecir.txt')
+
+datos_roundup = pd.read_csv('/home/Estudiante/Descargas/Clases 17-18 - Archivos clase-20251016/datos_roundup.txt', sep =" ")
+
+
+Ybarra = datos_roundup['ID'].mean()
+Xbarra = datos_roundup['RU'].mean()
+
+X = datos_roundup[['RU']].values
+Y = datos_roundup[['ID']].values
+
+X-Xbarra
+Y-Ybarra
+
+b1 = sum((X-Xbarra)*(Y-Ybarra))/ sum((X-Xbarra)*(X-Xbarra))
+
+b0 = Ybarra - b1*Xbarra
+
+#print(b0, b1)
+
+datos_mpg = pd.read_csv('/home/Estudiante/Descargas/Clases 17-18 - Archivos clase-20251016/auto-mpg.xls')
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Supongamos que tu DataFrame se llama df
+# Y que "altura" es "acceleration" (confirmame si es otra columna)
+
+sns.pairplot(datos_mpg[['mpg', 'weight', 'displacement', 'acceleration']])
+plt.show()
