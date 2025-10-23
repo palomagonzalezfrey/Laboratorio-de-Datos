@@ -1,0 +1,159 @@
+import pandas as pd
+import duckdb as dd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
+muestras = pd.read_csv('/home/Estudiante/Descargas/datos_libreta_103024.txt', sep = " ")
+
+#%%
+sns.set(style='whitegrid')
+
+sns.scatterplot(
+    data=muestras,
+    x='RU',
+    y='ID',
+    color='blue',
+    s=80  # tamaño de los puntos
+)
+
+plt.title('Dispersión de ID en función de RU')
+plt.xlabel('Concentración (RU)')
+plt.ylabel('ID')
+plt.show()
+
+sns.lmplot(data=muestras, x='RU', y='ID', ci=None, line_kws={'color': 'red'})
+plt.title('Tendencia lineal: ID vs RU')
+plt.show()
+
+#%%        
+        
+RU = muestras['RU']
+
+ID = muestras['ID']
+
+modelo_lineal = LinearRegression()
+
+modelo_lineal.fit(muestras[['RU']], muestras['ID'])
+
+beta0 = modelo_lineal.intercept_
+beta1 = modelo_lineal.coef_[0]
+r2 = modelo_lineal.score(muestras[['RU']], muestras['ID'])
+#coeficientes:
+#b = np.sum((RU - RU.mean()) * (ID - ID.mean())) / np.sum((RU - RU.mean())**2)
+
+#a = ID.mean() - b * RU.mean()
+
+# Mostrar los valores
+print(f"Valor estimado para β0 (intercepto): {beta0:.3f}")
+print(f"Valor estimado para β1 (pendiente): {beta1:.3f}")
+print(f"Coeficiente de determinación R2: {r2:.4f}")
+
+#coeficiente de determinacion R2
+R2 = modelo_lineal.score(muestras[['RU']], muestras['ID'])
+#%%
+#CONSIGNA 2 - MPG
+#%%
+
+mpg = pd.read_csv('/home/Estudiante/Descargas/Clases 17-18 - Archivos clase-20251023/auto-mpg.xls')
+
+sns.pairplot(mpg[['mpg', 'weight', 'displacement', 'acceleration']])
+plt.suptitle("Relaciones entre mpg, weight, displacement y acceleration", y=1.02)
+plt.show()
+#%%
+variables = ['mpg', 'weight', 'displacement', 'acceleration']
+
+# Graficar scatter plots de mpg vs cada variable
+for var in variables[1:]:
+    plt.figure()
+    plt.scatter(mpg[var], mpg['mpg'], alpha=0.5)
+    plt.title(f"mpg vs {var}")
+    plt.xlabel(var)
+    plt.ylabel('mpg')
+    plt.show()
+    
+    #%%
+    
+modelo_lineal = LinearRegression()
+
+modelo_lineal.fit(mpg[['weight']], mpg['mpg'])
+
+beta0 = modelo_lineal.intercept_
+beta1 = modelo_lineal.coef_[0]
+r2 = modelo_lineal.score(mpg[['weight']],mpg['mpg'])
+
+plt.scatter(mpg['weight'], mpg['mpg'], alpha=0.5)
+plt.plot(mpg['weight'], modelo_lineal.predict(mpg[['weight']]), color='red')
+plt.xlabel('Weight')
+plt.ylabel('MPG')
+plt.title('Regresión lineal simple: mpg vs weight')
+plt.show()
+
+#%%
+
+#Alturas!
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+
+#%%
+
+alturas = pd.read_csv('/home/Estudiante/Descargas/2025C2 - Alturas - Hoja 1.csv')
+
+
+# Selecciono solo las columnas que quieres
+columnas = ['Mami', 'Altura (cm)', 'LU']
+
+# Creo un nuevo DataFrame con esas columnas y elimino filas con algún NaN
+alturas_clean = alturas[columnas].dropna()
+
+from sklearn.model_selection import train_test_split
+
+X = alturas_clean[['Mami']]
+y = alturas_clean['Altura (cm)']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+knn = KNeighborsRegressor(n_neighbors=2)
+knn.fit(X_train, y_train)
+
+ypred = knn.predict(X_test)
+rmse = np.sqrt(mean_squared_error(y_test, ypred))
+
+print(f'RMSE en test: {rmse}')
+
+
+plt.figure(figsize=(8,6))
+plt.scatter(y_test, ypred, alpha=0.7)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--')  # línea diagonal ideal
+plt.xlabel('Altura real (cm)')
+plt.ylabel('Altura predicha (cm)')
+plt.title('Altura real vs predicha con KNN')
+plt.grid(True)
+plt.show()
+
+#---> Si los puntos caen justo sobre esa línea roja, el modelo está prediciendo perfectamente.
+
+#---> Si están lejos, significa que la predicción se aleja de la altura real, y por cuánto depende qué tan lejos estén los puntos.
+
+#%%
+neighbors = range(1, 21)
+
+mse_scores = []
+
+for k in neighbors:
+    knn = KNeighborsRegressor(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    ypred = knn.predict(X_test)
+    mse = mean_squared_error(y_test, ypred)
+    mse_scores.append(mse)
+
+# Graficar
+plt.figure(figsize=(8,6))
+plt.plot(neighbors, mse_scores, marker='o')
+plt.xlabel('Número de vecinos (n_neighbors)')
+plt.ylabel('Error Cuadrático Medio (MSE)')
+plt.title('MSE según n_neighbors para KNeighborsRegressor')
+plt.grid(True)
+plt.show()
